@@ -36,7 +36,7 @@
   constexpr bool INVERTIR_FL = false;  // Parámetro para invertir giro rueda frontal izquierda
   constexpr bool INVERTIR_FR = false;  // Parámetro para invertir giro rueda frontal derecha
   constexpr bool INVERTIR_RL = false;  // Parámetro para invertir giro rueda trasera izquierda
-  constexpr bool INVERTIR_RR = false;  // Parámetro para invertir giro rueda trasera derecha
+  constexpr bool INVERTIR_RR = true;  // Parámetro para invertir giro rueda trasera derecha
 
   constexpr uint32_t PWM_FREQ = 20000; // Frecuencia de los motores en Hercios (20kHz)
   constexpr uint8_t PWM_RES = 8;     // Definición a 8 bits (Valores disponibles de 0 a 255)
