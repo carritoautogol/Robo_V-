@@ -1,6 +1,8 @@
 #include "func_ultrasonicos.h"
 #include "config.h"
 
+#include <Arduino.h>
+
 int medirDistancia(int pinTrig, int pinEcho) {
   digitalWrite(pinTrig, LOW);
   delayMicroseconds(2);
