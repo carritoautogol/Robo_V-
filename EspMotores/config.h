@@ -89,6 +89,15 @@ constexpr uint8_t MPU_ADDR = 0x68;  // Dirección I2C del MPU6050
 extern float         yaw;          // Rumbo acumulado del robot en la cancha (grados)
 extern float         gyroZoffset;  // Compensación de drift del eje Z (se calcula en calibrarGyro)
 extern unsigned long tPrev;        // Marca de tiempo del ciclo anterior para integración de ángulo
+// ============================================================
+//  NAVEGACION — ULTRASONICOS 
+// ============================================================
+
+constexpr int DIST_SEGURIDAD_CM = 25; // Distancia límite a la pared para frenar el carro (Ajustable)
+extern int    distFrente;
+extern int    distAtras;
+extern int    distIzq;
+extern int    distDer;
  
 // ============================================================
 //  MÁQUINA DE ESTADOS
