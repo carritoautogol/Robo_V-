@@ -18,22 +18,21 @@ void handleRoot() {
 }
 
 /* ===================== CEREBRO UART =========================== */
-void leerUART() {                   // Rutina que escucha a la placa del Anillo
-  while (Enlace.available()) {      // Entra a un ciclo cerrado siempre que haya letras esperando en el cable
-    char c = Enlace.read();         // Jala la primera letra y la saca de la fila
-    if (c == '\n') {                // Detecta si la letra es un salto de línea invisible (fin del mensaje)
-      uartBuffer[bufIndex] = '\0';  // Agrega un carácter especial para cerrar el texto
-      float a;
-      int c_st, n;                                                     // Prepara variables vacías
-      if (sscanf(uartBuffer, "A:%f C:%d N:%d", &a, &c_st, &n) >= 2) {  // Destripa el texto y mete los números en las variables
-        anguloIR = a;                                                  // Actualiza globalmente el ángulo
-        estadoIR = c_st;                                               // Actualiza globalmente el estado (0/1)
-        nIR = n;                                                       // Actualiza globalmente el conteo de luz
-        ultimoDato = millis();                                         // Marca la hora exacta de la recepción
+void leerUART(){ 
+  while(Enlace.available()){ 
+    char c = Enlace.read(); 
+    if(c == '\n'){ 
+      uartBuffer[bufIndex] = '\0'; 
+      float a; int c_st, n, df, db, dl, dr; 
+      // Descompone la nueva trama con las distancias F B L R
+      if(sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7){ 
+        anguloIR = a; estadoIR = c_st; nIR = n; 
+        distFrente = df; distAtras = db; distIzq = dl; distDer = dr; // Asigna distancias del radar
+        ultimoDato = millis(); 
       }
-      bufIndex = 0;                           // Vuelve el índice a cero para pisar el mensaje viejo con el nuevo
-    } else if (c != '\r' && bufIndex < 63) {  // Si aún quedan letras y no se ha llenado la memoria
-      uartBuffer[bufIndex++] = c;             // Guarda la letra y avanza un cuadro de la memoria
+      bufIndex = 0; 
+    } else if(c != '\r' && bufIndex < 127){ 
+      uartBuffer[bufIndex++] = c; 
     }
   }
 }
