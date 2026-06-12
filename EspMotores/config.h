@@ -59,8 +59,8 @@ constexpr int RAMPA_PASO = 4;    // Incremento de PWM por ciclo de loop (acelera
 constexpr unsigned long T_CONFIRMA_MS = 500;  // Tiempo mínimo de señal continua antes de atacar (ms)
  
 // Variables mutables de velocidad — definidas en config.cpp
-extern int           velAvanceActual;  // Valor actual de la rampa de aceleración
-extern unsigned long tSenalEstable;    // Marca de tiempo desde que la pelota entró al cono frontal
+extern volatile int           velAvanceActual;  // Valor actual de la rampa de aceleración
+extern volatile unsigned long tSenalEstable;    // Marca de tiempo desde que la pelota entró al cono frontal
  
 // ============================================================
 //  COMUNICACIÓN UART (Anillo IR → ESP32)
@@ -70,14 +70,14 @@ constexpr uint8_t RX_PIN = 34;  // Pin de entrada de datos desde el anillo IR
 constexpr uint8_t TX_PIN = 17;  // Pin de salida serial (sin uso físico actualmente)
  
 // Objetos y variables mutables de UART — definidos en config.cpp
-extern HardwareSerial Enlace;    // Puerto Serial 2 por hardware
-extern char  uartBuffer[64];     // Buffer de recepción de tramas de texto
-extern int   bufIndex;           // Posición actual de escritura dentro del buffer
+extern volatile HardwareSerial Enlace;    // Puerto Serial 2 por hardware
+extern volatile char  uartBuffer[64];     // Buffer de recepción de tramas de texto
+extern volatile int   bufIndex;           // Posición actual de escritura dentro del buffer
  
-extern float         anguloIR;    // Ángulo de la pelota recibido por UART (grados); -1.0 = sin dato
-extern int           estadoIR;    // Presencia de pelota: 1 = detectada, 0 = ausente
-extern int           nIR;         // Cantidad de sensores IR activos en la trama recibida
-extern unsigned long ultimoDato;  // Tiempo del último paquete válido recibido (ms)
+extern volatile float         anguloIR;    // Ángulo de la pelota recibido por UART (grados); -1.0 = sin dato
+extern volatile int           estadoIR;    // Presencia de pelota: 1 = detectada, 0 = ausente
+extern volatile int           nIR;         // Cantidad de sensores IR activos en la trama recibida
+extern volatile unsigned long ultimoDato;  // Tiempo del último paquete válido recibido (ms)
  
 // ============================================================
 //  NAVEGACIÓN — GIROSCOPIO MPU
@@ -86,18 +86,18 @@ extern unsigned long ultimoDato;  // Tiempo del último paquete válido recibido
 constexpr uint8_t MPU_ADDR = 0x68;  // Dirección I2C del MPU6050
  
 // Variables mutables de navegación — definidas en config.cpp
-extern float         yaw;          // Rumbo acumulado del robot en la cancha (grados)
-extern float         gyroZoffset;  // Compensación de drift del eje Z (se calcula en calibrarGyro)
-extern unsigned long tPrev;        // Marca de tiempo del ciclo anterior para integración de ángulo
+extern volatile float         yaw;          // Rumbo acumulado del robot en la cancha (grados)
+extern volatile float         gyroZoffset;  // Compensación de drift del eje Z (se calcula en calibrarGyro)
+extern volatile unsigned long tPrev;        // Marca de tiempo del ciclo anterior para integración de ángulo
 // ============================================================
 //  NAVEGACION — ULTRASONICOS 
 // ============================================================
 
 constexpr int DIST_SEGURIDAD_CM = 25; // Distancia límite a la pared para frenar el carro (Ajustable)
-extern int    distFrente;
-extern int    distAtras;
-extern int    distIzq;
-extern int    distDer;
+extern volatile int    distFrente;
+extern volatile int    distAtras;
+extern volatile int    distIzq;
+extern volatile int    distDer;
  
 // ============================================================
 //  MÁQUINA DE ESTADOS
@@ -112,13 +112,13 @@ enum EstadoRobot {
 };
  
 // Variables mutables de estado — definidas en config.cpp
-extern EstadoRobot   estadoActual;
+extern volatile EstadoRobot   estadoActual;
  
-extern unsigned long tFrenoIniciado;    // Marca de inicio del frenado de protección (ms)
-extern unsigned long tUltimaVezPelota;  // Último instante en que se detectó la pelota (ms)
+extern volatile unsigned long tFrenoIniciado;    // Marca de inicio del frenado de protección (ms)
+extern volatile unsigned long tUltimaVezPelota;  // Último instante en que se detectó la pelota (ms)
  
-extern int           pasoBusqueda;          // Paso actual del patrón de búsqueda (0–7)
-extern unsigned long tBusqueda;             // Cronómetro interno del patrón de búsqueda (ms)
-extern bool          pelotaPerdidaReciente; // true si la pelota se perdió en el ciclo anterior
+extern volatile int           pasoBusqueda;          // Paso actual del patrón de búsqueda (0–7)
+extern volatile unsigned long tBusqueda;             // Cronómetro interno del patrón de búsqueda (ms)
+extern volatile bool          pelotaPerdidaReciente; // true si la pelota se perdió en el ciclo anterior
  
 #endif
