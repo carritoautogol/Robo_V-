@@ -7,7 +7,7 @@
 
 constexpr RX_PIN 26 
 constexpr TX_PIN 25 
-HardwareSerial Enlace(1); 
+extern volatile HardwareSerial Enlace(1); 
 
 // ============================================================
 //  MULTIPLEXOR — Pines de multiplexor
@@ -42,9 +42,9 @@ constexpr ECHO_R 23
 //  NAVEGACION — ULTRASONICOS
 // ============================================================
 
-extern int distFrente;
-extern int distAtras;
-extern int distIzq;
-extern int distDer;
+extern volatile int distFrente;
+extern volatile int distAtras;
+extern volatile int distIzq;
+extern volatile int distDer;
 
 #endif
