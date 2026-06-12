@@ -122,4 +122,6 @@ extern volatile int pasoBusqueda;            // Paso actual del patrón de búsq
 extern volatile unsigned long tBusqueda;     // Cronómetro interno del patrón de búsqueda (ms)
 extern volatile bool pelotaPerdidaReciente;  // true si la pelota se perdió en el ciclo anterior
 
+extern String recepVecinos;
+
 #endif
