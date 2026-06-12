@@ -2,8 +2,7 @@
 
 #include "config.h"
 #include "func_multiplexor"
-/*	Cadena de fotorreceptores adyacentes encendidos mas larga para descartar 
-rebotes de luz en otros fotorreceptores */
+
 int ubicarPelota(){
 	int mejorInicio = -1, mejorLargo = 0; 
 	int iniActual = -1, largoActual = 0; 
