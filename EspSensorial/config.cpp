@@ -1,10 +1,16 @@
 #include "config.h"
 
+HardwareSerial Enlace(1);
+
 // ============================================================
 //  NAVEGACION — ULTRASONICOS — variables mutables
 // ============================================================
 
-int distFrente = 999;
-int distAtras  = 999;
-int distIzq    = 999;
-int distDer    = 999;
+volatile int distFrente = 999;
+volatile int distAtras  = 999;
+volatile int distIzq    = 999;
+volatile int distDer    = 999;
+
+volatile int angulo = -1.0;
+
+volatile bool activo[16]; 
