@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "config.h"
 
 //Permite elegir mediante los 4 pines de comunicacion uno de los 16 fotorreceptores
 void seleccionarCanal(int canal) {
