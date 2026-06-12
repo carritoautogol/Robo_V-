@@ -31,13 +31,11 @@ void loop() {
   int mejorLargo = ubicarPelota();
 
   int estado = (mejorLargo > 0) ? 1 : 0; 
+
   String recepVecinos;
-
-  for(int i=0;i<16;i++){
-    if(activo[i] == true) recepVecinos += '1';
-    else recepVecinos += '0';
+  for (  int  i = 0; i < 16 ; i++ ){
+    activo[i]?recepVecinos +='1':recepVecinos +='0';
   }
-
   
   // ENSAMBLE DEL PAQUETE UART (Añadiendo F, B, L, R para las paredes)
   Enlace.print("A:"); Enlace.print(angulo, 1); 
@@ -46,12 +44,13 @@ void loop() {
   Enlace.print(" F:"); Enlace.print(distFrente);
   Enlace.print(" B:"); Enlace.print(distAtras);
   Enlace.print(" L:"); Enlace.print(distIzq);
-  Enlace.print(" R:"); Enlace.print(distDer);
-  Enlace.print(" V:"); Enlace.println(recepVecinos);
+  Enlace.print(" R:"); Enlace.println(distDer);
 
   // Monitor serie local para verificar que los ultrasónicos envían datos reales
-  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d V:%s]\n ", 
-                 angulo, estado, distFrente, distAtras, distIzq, distDer, recepVecinos); 
+  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d V: ", 
+                 angulo, estado, distFrente, distAtras, distIzq, distDer); 
+
+  Serial.println(recepVecinos);    
   
   delay(50); 
 }
