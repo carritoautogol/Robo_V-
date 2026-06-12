@@ -11,6 +11,6 @@ volatile int distAtras  = 999;
 volatile int distIzq    = 999;
 volatile int distDer    = 999;
 
-volatile int angulo = -1.0;
+volatile float angulo = -1.0;
 
 volatile bool activo[16]; 
