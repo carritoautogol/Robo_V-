@@ -291,7 +291,7 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
       "Receptores Vecinos: " + recepVecinos + "\n" +
       "Yaw: " + String(yaw) + "\n" +
       "Error de apunte: " + String(errApunte) + "\n" +
-      "Hay señal? " + (haySeñal ? "Si" : "No") + "\n" +
+      "Hay señal? " + String(haySenal ? "Si" : "No") + "\n"
       ;
   }
 #endif  // Cierra las directivas de los modos de competencia y calibración
