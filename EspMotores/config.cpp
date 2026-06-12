@@ -29,15 +29,6 @@ float         gyroZoffset = 0.0f;  // Se sobreescribe por calibrarGyro() en el s
 unsigned long tPrev       = 0;
 
 // ============================================================
-//  NAVEGACION — ULTRASONICOS — variables mutables
-// ============================================================
-
-int distFrente = 999;
-int distAtras  = 999;
-int distIzq    = 999;
-int distDer    = 999;
-
-// ============================================================
 //  MÁQUINA DE ESTADOS — variables mutables
 // ============================================================
 
