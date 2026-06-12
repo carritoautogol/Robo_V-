@@ -25,8 +25,9 @@ void leerUART() {
       uartBuffer[bufIndex] = '\0';
       float a;
       int c_st, n, df, db, dl, dr;
+      String rV;
       // Descompone la nueva trama con las distancias F B L R
-      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
+      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d V:%s", &a, &c_st, &n, &df, &db, &dl, &dr, &rV) >= 8) {
         anguloIR = a;
         estadoIR = c_st;
         nIR = n;
@@ -34,6 +35,7 @@ void leerUART() {
         distAtras = db;
         distIzq = dl;
         distDer = dr;  // Asigna distancias del radar
+        recepVecinos = rV;
         ultimoDato = millis();
       }
       bufIndex = 0;
@@ -270,9 +272,8 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
     Serial.printf("%s | AnguloIR=%.1f Senal=%d N_Sens=%d ErrAp=%.1f GyroYaw=%.1f\n",  // Imprime toda la línea
                   nombre, anguloIR, haySenal, nIR, errApunte, yaw);
   }
-#endif  // Cierra las directivas de los modos de competencia y calibración
 
-  server.handleClient();
+    server.handleClient();
 
   // Ejemplo de actualización
   static unsigned long tiempo = 0;
@@ -281,8 +282,21 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
     tiempo = millis();
 
     debugInfo =
-      "Tiempo: " + String(millis()) + "\n" + "Memoria libre: " + String(ESP.getFreeHeap()) + "\n";
+      "Tiempo: " + String(millis()) + "\n" + 
+      "Memoria libre: " + String(ESP.getFreeHeap()) + "\n" +
+      "Estado del robot: " + String(estadoActual) + "\n" +
+      "Accion: " + nombre + "\n" +
+      "Angulo: " + String(anguloIR) + "\n" +
+      "Receptores Activos: " + String(nIR) + "\n" +
+      "Receptores Vecinos: " + recepVecinos + "\n" +
+      "Yaw: " + String(yaw) + "\n" +
+      "Error de apunte: " + String(errApunte) + "\n" +
+      "Hay señal? " + (haySeñal ? "Si" : "No") + "\n" +
+      ;
   }
+#endif  // Cierra las directivas de los modos de competencia y calibración
+
+
 
   delay(25);  // Pequeña tregua al procesador Dual Core para ejecutar rutinas ocultas de la placa
 }
