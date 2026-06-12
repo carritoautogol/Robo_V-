@@ -1,6 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// ============================================================
+//  ULTRASONICOS — Pines de ultrasonicos
+// ============================================================
+
 #define TRIG_F 13 // Frente
 #define ECHO_F 12
 
@@ -17,9 +21,9 @@
 //  NAVEGACION — ULTRASONICOS — variables mutables
 // ============================================================
 
-int distFrente = 999;
-int distAtras  = 999;
-int distIzq    = 999;
-int distDer    = 999;
+extern int distFrente = 999;
+extern int distAtras  = 999;
+extern int distIzq    = 999;
+extern int distDer    = 999;
 
 #endif
