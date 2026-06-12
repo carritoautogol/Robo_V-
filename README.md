@@ -9,4 +9,13 @@ https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspMoto
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspMotores/func_motor.h
 
 CONTENIDO DE LA CARPETA ESPSENSORES
-//PENDIENTE :3
+
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/Anillo-TX.ino
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/config.cpp
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/config.h
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_anillo.cpp
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_anillo.h
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_multiplexor.cpp
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_multiplexor.h
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_ultrasonicos.cpp
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main/EspSensorial/func_ultrasonicos.h
