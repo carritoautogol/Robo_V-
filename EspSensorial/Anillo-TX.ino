@@ -2,14 +2,11 @@
    ESP32 ANILLO (TX) v10 - Centroide IR + Radar Ultrasónico
    ================================================================== */
 #include <Arduino.h> 
-
+#include <string.h>
 #include "config.h"
 #include "func_ultrasonicos.h"
 #include "func_multiplexor.h"
 #include "func_anillo.h"
-
-//Indica los fotorreceptores actualmente encendidos
-bool activo[16]; 
 
 void setup() {
   Serial.begin(115200); 
@@ -27,14 +24,20 @@ void setup() {
 
 void loop() {
   // LÓGICA DE DETECCIÓN INFRARROJA (Corriendo en el Núcleo 1)
-       
   int totalActivos = 0; 
 
-  fotorreceptoresActivos();
+  fotorreceptoresActivos(totalActivos);
 
   int mejorLargo = ubicarPelota();
 
   int estado = (mejorLargo > 0) ? 1 : 0; 
+  String recepVecinos;
+
+  for(int i=0;i<16;i++){
+    if(activo[i] == true) recepVecinos += '1';
+    else recepVecinos += '0';
+  }
+
   
   // ENSAMBLE DEL PAQUETE UART (Añadiendo F, B, L, R para las paredes)
   Enlace.print("A:"); Enlace.print(angulo, 1); 
@@ -43,11 +46,12 @@ void loop() {
   Enlace.print(" F:"); Enlace.print(distFrente);
   Enlace.print(" B:"); Enlace.print(distAtras);
   Enlace.print(" L:"); Enlace.print(distIzq);
-  Enlace.print(" R:"); Enlace.println(distDer);
+  Enlace.print(" R:"); Enlace.print(distDer);
+  Enlace.print(" V:"); Enlace.println(recepVecinos);
 
   // Monitor serie local para verificar que los ultrasónicos envían datos reales
-  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d]\n", 
-                 angulo, estado, distFrente, distAtras, distIzq, distDer); 
+  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d V:%s]\n ", 
+                 angulo, estado, distFrente, distAtras, distIzq, distDer, recepVecinos); 
   
   delay(50); 
 }
