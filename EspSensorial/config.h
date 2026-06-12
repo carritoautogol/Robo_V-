@@ -52,6 +52,6 @@ extern volatile int distDer;
 //Indica los fotorreceptores actualmente encendidos
 extern volatile bool activo[16]; 
 
-extern volatile int angulo;
+extern volatile float angulo;
 
 #endif
