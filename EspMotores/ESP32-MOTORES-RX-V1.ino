@@ -18,21 +18,27 @@ void handleRoot() {
 }
 
 /* ===================== CEREBRO UART =========================== */
-void leerUART(){ 
-  while(Enlace.available()){ 
-    char c = Enlace.read(); 
-    if(c == '\n'){ 
-      uartBuffer[bufIndex] = '\0'; 
-      float a; int c_st, n, df, db, dl, dr; 
+void leerUART() {
+  while (Enlace.available()) {
+    char c = Enlace.read();
+    if (c == '\n') {
+      uartBuffer[bufIndex] = '\0';
+      float a;
+      int c_st, n, df, db, dl, dr;
       // Descompone la nueva trama con las distancias F B L R
-      if(sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7){ 
-        anguloIR = a; estadoIR = c_st; nIR = n; 
-        distFrente = df; distAtras = db; distIzq = dl; distDer = dr; // Asigna distancias del radar
-        ultimoDato = millis(); 
+      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
+        anguloIR = a;
+        estadoIR = c_st;
+        nIR = n;
+        distFrente = df;
+        distAtras = db;
+        distIzq = dl;
+        distDer = dr;  // Asigna distancias del radar
+        ultimoDato = millis();
       }
-      bufIndex = 0; 
-    } else if(c != '\r' && bufIndex < 127){ 
-      uartBuffer[bufIndex++] = c; 
+      bufIndex = 0;
+    } else if (c != '\r' && bufIndex < 127) {
+      uartBuffer[bufIndex++] = c;
     }
   }
 }
