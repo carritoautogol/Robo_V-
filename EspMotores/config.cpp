@@ -49,3 +49,5 @@ volatile int distFrente = 999;
 volatile int distAtras = 999;
 volatile int distIzq = 999;
 volatile int distDer = 999;
+
+String recepVecinos;
