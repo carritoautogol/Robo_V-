@@ -37,8 +37,8 @@ constexpr int ECHO_B = 27;
 constexpr int TRIG_L = 32; // Izquierda
 constexpr int ECHO_L = 33;
 
-constexpr int TRIG_R = 22; // Derecha
-constexpr int ECHO_R = 23;
+constexpr int TRIG_R = 21; // Derecha
+constexpr int ECHO_R = 26;
 
 // ============================================================
 //  NAVEGACION — ULTRASONICOS
