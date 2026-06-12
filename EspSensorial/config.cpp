@@ -1,6 +1,6 @@
 #include "config.h"
 
-HardwareSerial Enlace(1);
+HardwareSerial Enlace(2);
 
 // ============================================================
 //  NAVEGACION — ULTRASONICOS — variables mutables
