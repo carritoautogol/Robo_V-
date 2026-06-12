@@ -1,7 +1,7 @@
 #include <math.h>
-
+#include <Arduino.h>
 #include "config.h"
-#include "func_multiplexor"
+#include "func_multiplexor.h"
 
 int ubicarPelota(){
 	int mejorInicio = -1, mejorLargo = 0; 
@@ -20,7 +20,8 @@ int ubicarPelota(){
 	}
 	if (mejorLargo > totalSensores) mejorLargo = totalSensores; 
 
-	float angulo = -1.0; 
+	angulo = -1.0; 
+
 	if (mejorLargo > 0) { 
 		float sx = 0, sy = 0; 
 		for (int j = 0; j < mejorLargo; j++) { 
