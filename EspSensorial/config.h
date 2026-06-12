@@ -1,13 +1,15 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <Arduino.h>
+
 // ============================================================
 //  COMUNICACIÓN — UART — Pines de comunicacion
 // ============================================================
 
-constexpr RX_PIN 26 
-constexpr TX_PIN 25 
-extern volatile HardwareSerial Enlace(1); 
+constexpr int RX_PIN = 26;
+constexpr int TX_PIN = 25; 
+extern HardwareSerial Enlace;
 
 // ============================================================
 //  MULTIPLEXOR — Pines de multiplexor
@@ -26,17 +28,17 @@ constexpr float GRADOS_POR_SENSOR = 22.5;
 //  ULTRASONICOS — Pines de ultrasonicos
 // ============================================================
 
-constexpr TRIG_F 13 // Frente
-constexpr ECHO_F 12
+constexpr int TRIG_F = 13; // Frente
+constexpr int ECHO_F = 12;
 
-constexpr TRIG_B 14 // Atrás
-constexpr ECHO_B 27
+constexpr int TRIG_B = 14; // Atrás
+constexpr int ECHO_B = 27;
 
-constexpr TRIG_L 32 // Izquierda
-constexpr ECHO_L 33
+constexpr int TRIG_L = 32; // Izquierda
+constexpr int ECHO_L = 33;
 
-constexpr TRIG_R 22 // Derecha
-constexpr ECHO_R 23
+constexpr int TRIG_R = 22; // Derecha
+constexpr int ECHO_R = 23;
 
 // ============================================================
 //  NAVEGACION — ULTRASONICOS
@@ -46,5 +48,10 @@ extern volatile int distFrente;
 extern volatile int distAtras;
 extern volatile int distIzq;
 extern volatile int distDer;
+
+//Indica los fotorreceptores actualmente encendidos
+extern volatile bool activo[16]; 
+
+extern volatile int angulo;
 
 #endif
