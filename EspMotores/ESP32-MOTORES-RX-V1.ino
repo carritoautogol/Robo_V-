@@ -5,6 +5,7 @@
 #include "config.h"
 #include <WiFi.h>
 #include <WebServer.h>
+#define MODO 1
 
 const char* ssid = "ESP32_DEBUG";
 const char* password = "12345678";
@@ -25,9 +26,8 @@ void leerUART() {
       uartBuffer[bufIndex] = '\0';
       float a;
       int c_st, n, df, db, dl, dr;
-      String rV;
       // Descompone la nueva trama con las distancias F B L R
-      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d V:%s", &a, &c_st, &n, &df, &db, &dl, &dr, &rV) >= 8) {
+      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d ", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
         anguloIR = a;
         estadoIR = c_st;
         nIR = n;
@@ -35,7 +35,6 @@ void leerUART() {
         distAtras = db;
         distIzq = dl;
         distDer = dr;  // Asigna distancias del radar
-        recepVecinos = rV;
         ultimoDato = millis();
       }
       bufIndex = 0;
@@ -97,6 +96,7 @@ void setup() {                                                      // Función 
 
 /* ===================== LOOP DEL PARTIDO ================================== */
 void loop() {         // Función de pensamiento que ocurre miles de veces por segundo
+  server.handleClient();
   actualizarRumbo();  // Actualiza brújula obligatoriamente
   leerUART();         // Extrae los datos obligatoriamente
 
@@ -273,7 +273,7 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
                   nombre, anguloIR, haySenal, nIR, errApunte, yaw);
   }
 
-    server.handleClient();
+    
 
   // Ejemplo de actualización
   static unsigned long tiempo = 0;
@@ -288,7 +288,6 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
       "Accion: " + nombre + "\n" +
       "Angulo: " + String(anguloIR) + "\n" +
       "Receptores Activos: " + String(nIR) + "\n" +
-      "Receptores Vecinos: " + recepVecinos + "\n" +
       "Yaw: " + String(yaw) + "\n" +
       "Error de apunte: " + String(errApunte) + "\n" +
       "Hay señal? " + String(haySenal ? "Si" : "No") + "\n"
