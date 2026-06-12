@@ -2,30 +2,14 @@
    ESP32 ANILLO (TX) v10 - Centroide IR + Radar Ultrasónico
    ================================================================== */
 #include <Arduino.h> 
-#include <math.h>    
-#include "Ultrasonicos.h" // Vincula la pestaña del radar
 
-// --- PINES DEL MULTIPLEXOR ---
-const int pinS0 = 19; 
-const int pinS1 = 18; 
-const int pinS2 = 17; 
-const int pinS3 = 16; 
-const int pinSIG = 4; 
+#include "config.h"
+#include "func_ultrasonicos.h"
+#include "func_multiplexor.h"
+#include "func_anillo.h"
 
-const int totalSensores = 16; 
-const float GRADOS_POR_SENSOR = 22.5; 
-
-// --- COMUNICACIÓN UART ---
-#define RX_PIN 26 
-#define TX_PIN 25 
-HardwareSerial Enlace(1); 
-
-void seleccionarCanal(int canal) {
-  digitalWrite(pinS0, bitRead(canal, 0)); 
-  digitalWrite(pinS1, bitRead(canal, 1)); 
-  digitalWrite(pinS2, bitRead(canal, 2)); 
-  digitalWrite(pinS3, bitRead(canal, 3)); 
-}
+//Indica los fotorreceptores actualmente encendidos
+bool activo[16]; 
 
 void setup() {
   Serial.begin(115200); 
@@ -43,44 +27,12 @@ void setup() {
 
 void loop() {
   // LÓGICA DE DETECCIÓN INFRARROJA (Corriendo en el Núcleo 1)
-  bool activo[16];      
+       
   int totalActivos = 0; 
 
-  for (int i = 0; i < totalSensores; i++) { 
-    seleccionarCanal(i); 
-    delayMicroseconds(100); 
-    activo[i] = (digitalRead(pinSIG) == LOW); 
-    if (activo[i]) totalActivos++; 
-  }
+  fotorreceptoresActivos();
 
-  int mejorInicio = -1, mejorLargo = 0; 
-  int iniActual = -1, largoActual = 0; 
-  
-  for (int k = 0; k < totalSensores * 2; k++) { 
-    int i = k % totalSensores; 
-    if (activo[i]) { 
-      if (largoActual == 0) iniActual = i; 
-      largoActual++; 
-      if (largoActual > mejorLargo) { 
-        mejorLargo = largoActual; 
-        mejorInicio = iniActual; 
-      }
-    } else { largoActual = 0; }
-  }
-  if (mejorLargo > totalSensores) mejorLargo = totalSensores; 
-
-  float angulo = -1.0; 
-  if (mejorLargo > 0) { 
-    float sx = 0, sy = 0; 
-    for (int j = 0; j < mejorLargo; j++) { 
-      int idx = (mejorInicio + j) % totalSensores; 
-      float a = radians(idx * GRADOS_POR_SENSOR); 
-      sx += cos(a); 
-      sy += sin(a); 
-    }
-    angulo = degrees(atan2(sy, sx)); 
-    if (angulo < 0) angulo += 360.0; 
-  }
+  int mejorLargo = ubicarPelota();
 
   int estado = (mejorLargo > 0) ? 1 : 0; 
   
