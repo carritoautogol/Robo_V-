@@ -51,7 +51,7 @@ recepVecinos[16] = '\0';
   Enlace.print(" V:"); Enlace.println(recepVecinos);
 
   // Monitor serie local para verificar que los ultrasónicos envían datos reales
-  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d V:%s]\n ", 
+  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d V:%s]\n", 
                  angulo, estado, distFrente, distAtras, distIzq, distDer, recepVecinos); 
 
   //Serial.println(recepVecinos);    
