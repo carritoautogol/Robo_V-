@@ -26,9 +26,29 @@ void leerUART() {
       uartBuffer[bufIndex] = '\0';
       float a;
       int c_st, n, df, db, dl, dr;
-      char rV[32];
+      char rV[16];
       // Descompone la nueva trama con las distancias F B L R
-      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d V:%31s", &a, &c_st, &n, &df, &db, &dl, &dr, rV) >= 8) {
+      if (
+        (uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d ", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
+        
+        char *ptr = strstr(uartBuffer, "R:");
+        if(ptr != NULL) {
+          // saltar "R:" y el número de distDer
+          ptr = strchr(ptr, ' ');
+          if(ptr != NULL) {
+            ptr++; // ahora apunta al primer booleano
+
+            for(int i = 0; i < 16; i++) {
+
+              rV[i] = atoi(ptr);
+              // avanzar hasta la siguiente coma
+              ptr = strchr(ptr, ',');
+              if(ptr != NULL)
+                ptr++;
+            }
+          }
+        }
+
         anguloIR = a;
         estadoIR = c_st;
         nIR = n;
@@ -36,7 +56,7 @@ void leerUART() {
         distAtras = db;
         distIzq = dl;
         distDer = dr;  // Asigna distancias del radar
-        recepVecinos = String(rV);
+        recepVecinos = rV;
         ultimoDato = millis();
       }
       bufIndex = 0;
@@ -271,8 +291,8 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
   static unsigned long t = 0;                                                         // Reloj exclusivo de la pantalla serial
   if (millis() - t > 250) {                                                           // Imprime la información solo 4 veces por segundo para no trabar el IDE
     t = millis();                                                                     // Resetea reloj de pantalla
-    Serial.printf("%s | AnguloIR=%.1f Senal=%d N_Sens=%d ErrAp=%.1f GyroYaw=%.1f Veci=%s\n",  // Imprime toda la línea
-                  nombre, anguloIR, haySenal, nIR, errApunte, yaw, recepVecinos.c_str());
+    Serial.printf("%s | AnguloIR=%.1f Senal=%d N_Sens=%d ErrAp=%.1f GyroYaw=%.1f Veci:%s \n",  // Imprime toda la línea
+                  nombre, anguloIR, haySenal, nIR, errApunte, yaw, recepVecinos);
   }
 
     
