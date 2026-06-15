@@ -49,29 +49,18 @@ void ruedas(int fl, int fr, int rl, int rr) {
   RL(rl);
   RR(rr);
 }  // Aplica valores a las 4 a la vez
-/*
 void detener() {
   ruedas(0, 0, 0, 0);
   velAvanceActual = 0;
-  
 }  // Frena las 4 ruedas y reinicia la aceleración
-*/
-
-void detener() {                    // Recibe la velocidad máxima deseada y una corrección angular
-  
-  if (velAvanceActual > 0 ) velAvanceActual -= RAMPA_PASO;  // Si va más lento, acelera sumando 4
-  if (velAvanceActual => 0 ) velAvanceActual = 0;     // Si se pasó, lo recorta al máximo permitido
-  ruedas(velAvanceActual, velAvanceActual,          // Aplica la aceleración y tuerce la llanta según el error (corr)
-         velAvanceActual, velAvanceActual);         // Aplica a las llantas traseras también
-}
 void girarEnSitio(int v) {
   ruedas(v, -v, v, -v);
-}  // Aplica fuerza contraria entre lados para pivotear sobre su eje
+}  // Si se le da un valor positivo: Gira a la derecha, negativo: Gira a la izquierda
 
 // Sistema antideslizamiento y aceleración controlada
 void avanzarSuave(int objetivo, int corr) {                       // Recibe la velocidad máxima deseada y una corrección angular
   if (velAvanceActual < objetivo) velAvanceActual += RAMPA_PASO;  // Si va más lento, acelera sumando 4
   if (velAvanceActual > objetivo) velAvanceActual = objetivo;     // Si se pasó, lo recorta al máximo permitido
   ruedas(velAvanceActual + corr, velAvanceActual - corr,          // Aplica la aceleración y tuerce la llanta según el error (corr)
-         velAvanceActual + corr, velAvanceActual - corr);         // Aplica a las llantas traseras también
+         velAvanceActual + corr, velAvanceActual - corr);         // Valor positivo: Avanza mientras gira a la derecha, negativo: Avanza mientras gira a la izqueirda
 }
