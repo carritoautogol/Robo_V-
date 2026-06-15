@@ -1,7 +1,10 @@
 #ifndef FUNC_MULTIPLEXOR_H
 #define FUNC_MULTIPLEXOR_H
 
-//Permite elegir mediante los 4 pines de comunicacion uno de los 16 fotorreceptores
+/**
+ * @brief Selecciona un canal del multiplexor CD74HC4067.
+ * @param canal Número de canal (0 a 15).
+ */
 void seleccionarCanal(int canal);
 
-#endif
+#endif // FUNC_MULTIPLEXOR_H
