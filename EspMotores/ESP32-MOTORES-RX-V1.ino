@@ -29,21 +29,21 @@ void leerUART() {
       char rV[16];
       // Descompone la nueva trama con las distancias F B L R
       if (
-        (uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d ", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
-        
-        char *ptr = strstr(uartBuffer, "R:");
-        if(ptr != NULL) {
+      sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d ", &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
+
+        char* ptr = strstr(uartBuffer, "R:");
+        if (ptr != NULL) {
           // saltar "R:" y el número de distDer
           ptr = strchr(ptr, ' ');
-          if(ptr != NULL) {
-            ptr++; // ahora apunta al primer booleano
+          if (ptr != NULL) {
+            ptr++;  // ahora apunta al primer booleano
 
-            for(int i = 0; i < 16; i++) {
+            for (int i = 0; i < 16; i++) {
 
               rV[i] = atoi(ptr);
               // avanzar hasta la siguiente coma
               ptr = strchr(ptr, ',');
-              if(ptr != NULL)
+              if (ptr != NULL)
                 ptr++;
             }
           }
@@ -117,7 +117,7 @@ void setup() {                                                      // Función 
 }
 
 /* ===================== LOOP DEL PARTIDO ================================== */
-void loop() {         // Función de pensamiento que ocurre miles de veces por segundo
+void loop() {  // Función de pensamiento que ocurre miles de veces por segundo
   server.handleClient();
   actualizarRumbo();  // Actualiza brújula obligatoriamente
   leerUART();         // Extrae los datos obligatoriamente
@@ -143,7 +143,7 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
   /* --- MODO COMPETENCIA DESTRUCTORA --- */
 
   // Extrae la diferencia de grados (Si no hay pelota, fuerza a cero para no hacer cálculos locos)
-  float errApunte = haySenal ? errorAngular(FRENTE_ANILLO, anguloIR) : 0;
+  float errApunte = haySenal ? errorAngular(anguloIR) : 0;
 
   // Condición severa de posesión: Hay luz Y está dentro del cono frontal Y satura suficientes receptores
   bool pelotaPegada = haySenal && (abs(errApunte) <= TOL_APUNTADO) && (nIR >= N_CAPTURA);
@@ -246,7 +246,7 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
 
     case PERSIGUIENDO:                                            // Acciones de ataque
       if (abs(errApunte) > TOL_APUNTADO) {                        // Si está muy chueco respecto a la pelota
-        int sentido = (errApunte > 0) ? VEL_GIRO : -VEL_GIRO;     // Elige un giro negativo o positivo
+        int sentido = (errApunte > 0) ? VEL_GIRO : -VEL_GIRO;     // Si la pelota esta en TOL_APUNTADO a 180 grados, gira derecha, de 181 a  
         girarEnSitio(sentido);                                    // Ejecuta el giro físico
         tSenalEstable = 0;                                        // Rompe el tiempo de confirmación para que no ataque a lo tonto
         nombre = "PERSIGUE -> ENCUADRANDO";                       // Diagnóstico
@@ -273,13 +273,13 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
 
     case REGRESANDO:
       {                                                          // Fase de anotación
-        float errYaw = errorAngular(YAW_PORTERIA, yaw);          // Extrae la diferencia contra la pared Norte
+        float errYaw = errorAngular(yaw);                        // Extrae la diferencia contra la pared Norte
         if (abs(errYaw) > TOL_PORTERIA) {                        // Si la pared Norte no está de frente todavía...
-          int sentidoYaw = (errYaw > 0) ? VEL_GIRO : -VEL_GIRO;  // Asigna giro derecho o izquierdo
+          int sentidoYaw = (errYaw < 0) ? VEL_GIRO : -VEL_GIRO;  // Valor positivo: Gira derecha, negativo: Gira izquierda
           girarEnSitio(sentidoYaw);                              // Empieza a girar con la pelota atorada en el bumper
           nombre = "PORTERIA -> GIRANDO BRÚJULA";                // Diagnóstico
         } else {                                                 // Si la pared ya está de frente a nosotros...
-          int corr = constrain((int)(errYaw * 2.0), -30, 30);    // Calcula desviación y crea ajuste
+          int corr = constrain((int)(errYaw * -2.0), -30, 30);   // Calcula desviación y crea ajuste
           avanzarSuave(VEL_AVANCE, corr);                        // Acelera en línea recta usando el ajuste para no curvarse
           nombre = "PORTERIA -> REMATE DE FRENTE";               // Diagnóstico
         }
@@ -288,14 +288,14 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
   }
 
   // --- REPORTE CONSTANTE A LA COMPUTADORA ---
-  static unsigned long t = 0;                                                         // Reloj exclusivo de la pantalla serial
-  if (millis() - t > 250) {                                                           // Imprime la información solo 4 veces por segundo para no trabar el IDE
-    t = millis();                                                                     // Resetea reloj de pantalla
+  static unsigned long t = 0;                                                                  // Reloj exclusivo de la pantalla serial
+  if (millis() - t > 250) {                                                                    // Imprime la información solo 4 veces por segundo para no trabar el IDE
+    t = millis();                                                                              // Resetea reloj de pantalla
     Serial.printf("%s | AnguloIR=%.1f Senal=%d N_Sens=%d ErrAp=%.1f GyroYaw=%.1f Veci:%s \n",  // Imprime toda la línea
                   nombre, anguloIR, haySenal, nIR, errApunte, yaw, recepVecinos);
   }
 
-    
+
 
   // Ejemplo de actualización
   static unsigned long tiempo = 0;
@@ -304,17 +304,7 @@ void loop() {         // Función de pensamiento que ocurre miles de veces por s
     tiempo = millis();
 
     debugInfo =
-      "Tiempo: " + String(millis()) + "\n" + 
-      "Memoria libre: " + String(ESP.getFreeHeap()) + "\n" +
-      "Estado del robot: " + String(estadoActual) + "\n" +
-      "Accion: " + nombre + "\n" +
-      "Angulo: " + String(anguloIR) + "\n" +
-      "Receptores Activos: " + String(nIR) + "\n" +
-      "Yaw: " + String(yaw) + "\n" +
-      "Error de apunte: " + String(errApunte) + "\n" +
-      "Hay señal? " + String(haySenal ? "Si" : "No") + "\n" +
-      "Receptores Vecinos: " + recepVecinos + "\n"
-      ;
+      "Tiempo: " + String(millis()) + "\n" + "Memoria libre: " + String(ESP.getFreeHeap()) + "\n" + "Estado del robot: " + String(estadoActual) + "\n" + "Accion: " + nombre + "\n" + "Angulo: " + String(anguloIR) + "\n" + "Receptores Activos: " + String(nIR) + "\n" + "Yaw: " + String(yaw) + "\n" + "Error de apunte: " + String(errApunte) + "\n" + "Hay señal? " + String(haySenal ? "Si" : "No") + "\n" + "Receptores Vecinos: " + recepVecinos + "\n";
   }
 #endif  // Cierra las directivas de los modos de competencia y calibración
 
