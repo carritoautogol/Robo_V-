@@ -9,6 +9,6 @@ int16_t mpuGz();                           // Función para extraer datos físic
 bool mpuInit();                            // Función de arranque del giroscopio
 void calibrarGyro();                       // Rutina de autocalibración térmica
 void actualizarRumbo();                    // Rutina que se llama en cada milisegundo del loop
-float errorAngular(float obj, float act);  // Rutina de la ruta más corta
+float errorAngular(float angulo);  // Rutina de la ruta más corta
 
 #endif
