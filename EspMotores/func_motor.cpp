@@ -1,6 +1,6 @@
 #include "func_motor.h"
 #include "config.h"
-
+//Prueba de changes
 void pwmInit(int pin) {
   ledcAttach(pin, PWM_FREQ, PWM_RES);
 }  // Inicializa el pin
