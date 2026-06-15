@@ -1,55 +1,72 @@
-/* ==================================================================
-   ESP32 ANILLO (TX) v10 - Centroide IR + Radar Ultrasónico
-   ================================================================== */
-#include <Arduino.h> 
-#include <string.h>
+/**
+ * @file Anillo-TX.ino
+ * @brief Transmisión de datos del anillo de sensores y radar ultrasónico.
+ * 
+ * Lee 16 sensores IR a través de un multiplexor CD74HC4067 y 4 sensores
+ * ultrasónicos HC-SR04, calcula el ángulo donde se encuentra la pelota
+ * mediante centroide y envía la trama por UART a la ESP32 de motores.
+ * 
+ * @author Robo_V Team
+ * @version v10 (Centroide IR + Radar)
+ */
+
+#include <Arduino.h>
 #include "config.h"
 #include "func_ultrasonicos.h"
 #include "func_multiplexor.h"
 #include "func_anillo.h"
 
 void setup() {
-  Serial.begin(115200); 
-  Enlace.begin(38400, SERIAL_8N1, RX_PIN, TX_PIN); 
+  Serial.begin(115200);
+  Enlace.begin(38400, SERIAL_8N1, RX_PIN, TX_PIN);
   
-  pinMode(pinS0, OUTPUT); pinMode(pinS1, OUTPUT);
-  pinMode(pinS2, OUTPUT); pinMode(pinS3, OUTPUT);
-  pinMode(pinSIG, INPUT_PULLUP);   
+  // Configurar pines del multiplexor
+  pinMode(pinS0, OUTPUT);
+  pinMode(pinS1, OUTPUT);
+  pinMode(pinS2, OUTPUT);
+  pinMode(pinS3, OUTPUT);
+  pinMode(pinSIG, INPUT_PULLUP);
   
-  // Enciende el radar en el Núcleo 0 de forma paralela
-  iniciarUltrasonicos(); 
+  // Iniciar la tarea de ultrasonidos en el núcleo 0
+  iniciarUltrasonicos();
   
-  Serial.println("\n=== ESP32 ANILLO (TX) v10 Listo ==="); 
+  Serial.println("\n=== ESP32 ANILLO (TX) v10 Listo ===");
 }
 
 void loop() {
-  // LÓGICA DE DETECCIÓN INFRARROJA (Corriendo en el Núcleo 1)
-  int totalActivos = 0; 
-
+  // Leer el estado de los 16 sensores IR
+  int totalActivos = 0;
   fotorreceptoresActivos(totalActivos);
-
+  
+  // Calcular ángulo por centroide
   int mejorLargo = ubicarPelota();
-
-  int estado = (mejorLargo > 0) ? 1 : 0; 
-
-  // ENSAMBLE DEL PAQUETE UART (Añadiendo F, B, L, R para las paredes)
-  Enlace.print("A:"); Enlace.print(angulo, 1); 
-  Enlace.print(" C:"); Enlace.print(estado); 
-  Enlace.print(" N:"); Enlace.print(totalActivos);
-  Enlace.print(" F:"); Enlace.print(distFrente);
-  Enlace.print(" B:"); Enlace.print(distAtras);
-  Enlace.print(" L:"); Enlace.print(distIzq);
-  Enlace.print(" R:"); Enlace.print(distDer);
-  for(int i = 0; i < 16; i++) {
+  int estado = (mejorLargo > 0) ? 1 : 0;
+  
+  // Construir trama UART
+  Enlace.print("A:");
+  Enlace.print(angulo, 1);
+  Enlace.print(" C:");
+  Enlace.print(estado);
+  Enlace.print(" N:");
+  Enlace.print(totalActivos);
+  Enlace.print(" F:");
+  Enlace.print(distFrente);
+  Enlace.print(" B:");
+  Enlace.print(distAtras);
+  Enlace.print(" L:");
+  Enlace.print(distIzq);
+  Enlace.print(" R:");
+  Enlace.print(distDer);
+  
+  for (int i = 0; i < 16; i++) {
     Enlace.print(activo[i]);
     Enlace.print(",");
   }
   Enlace.println();
-
-  // Monitor serie local para verificar que los ultrasónicos envían datos reales
-  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d]\n ", 
-                 angulo, estado, distFrente, distAtras, distIzq, distDer); 
-
   
-  delay(50); 
+  // Depuración local
+  Serial.printf("TX -> IR[A:%.1f C:%d] RADAR[F:%d B:%d L:%d R:%d]\n",
+                angulo, estado, distFrente, distAtras, distIzq, distDer);
+  
+  delay(50);  // 20 Hz
 }
