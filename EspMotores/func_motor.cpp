@@ -49,10 +49,13 @@ void ruedas(int fl, int fr, int rl, int rr) {
   RL(rl);
   RR(rr);
 }  // Aplica valores a las 4 a la vez
-void detener() {
-  ruedas(0, 0, 0, 0);
-  velAvanceActual = 0;
-}  // Frena las 4 ruedas y reinicia la aceleración
+void detener() {                    // Recibe la velocidad máxima deseada y una corrección angular
+  
+  if (velAvanceActual > 0 ) velAvanceActual -= RAMPA_PASO;  // Si va más lento, acelera sumando 4
+  if (velAvanceActual => 0 ) velAvanceActual = 0;     // Si se pasó, lo recorta al máximo permitido
+  ruedas(velAvanceActual, velAvanceActual,          // Aplica la aceleración y tuerce la llanta según el error (corr)
+         velAvanceActual, velAvanceActual);         // Aplica a las llantas traseras también
+}
 void girarEnSitio(int v) {
   ruedas(v, -v, v, -v);
 }  // Si se le da un valor positivo: Gira a la derecha, negativo: Gira a la izquierda
