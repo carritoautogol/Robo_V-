@@ -48,9 +48,8 @@ void actualizarRumbo() {                       // Rutina que se llama en cada mi
   yaw += gz * dt;                              // Integra el cálculo sumándolo al rumbo absoluto general
 }
 
-float errorAngular(float obj, float act) {  // Rutina de la ruta más corta
-  float e = obj - act;                      // Resta los ángulos a lo bruto
-  while (e > 180) e -= 360;                 // Si le pide dar casi una vuelta entera a la derecha, mejor gira a la izquierda
-  while (e < -180) e += 360;                // Aplica lo mismo pero para la izquierda
-  return e;                                 // Devuelve los grados exactos que se deben mover
+float errorAngular(float angulo) {  // Rutina de la ruta más corta
+  while (angulo > 180) angulo -= 360;                 // Si le pide dar casi una vuelta entera a la derecha, mejor gira a la izquierda
+  while (angulo < -180) angulo += 360;                // Aplica lo mismo pero para la izquierda
+  return angulo;                                 // Devuelve los grados exactos que se deben mover
 }
