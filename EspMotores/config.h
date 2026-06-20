@@ -2,100 +2,101 @@
 #define CONFIG_H
 
 #include <Arduino.h>
+#include <WiFi.h>
+#include <WebServer.h>
 
-// ====================== COMUNICACIÓN UART ======================
-extern HardwareSerial Enlace;
-constexpr int RX_PIN = 34;     // Recepción desde el anillo (Serial2)
-constexpr int TX_PIN = 17;     // No se usa en este lado
 
-// ====================== PINES DE MOTORES (TB6612FNG) ======================
-// Driver 1 (ruedas izquierdas)
-constexpr uint8_t STBY      = 4;
+// Parámetros de juego
+constexpr float FRENTE_ANILLO = 0.0f;
+constexpr float TOL_APUNTADO = 40.0f;
+constexpr unsigned long T_QUIETO_MS = 4000;
+constexpr int N_CAPTURA = 3;
+constexpr float YAW_PORTERIA = 0.0f;
+constexpr float TOL_PORTERIA = 15.0f;
 
-// Rueda Delantera Izquierda (FL)
-constexpr uint8_t FL_PWM    = 25;
-constexpr uint8_t FL_IN1    = 26;
-constexpr uint8_t FL_IN2    = 27;
+// Pines motores (TB6612FNG)
+constexpr uint8_t STBY = 4;
+constexpr uint8_t FL_PWM = 25, FL_IN1 = 26, FL_IN2 = 27;
+constexpr uint8_t RL_PWM = 33, RL_IN1 = 32, RL_IN2 = 14;
+constexpr uint8_t FR_PWM = 13, FR_IN1 = 23, FR_IN2 = 2;
+constexpr uint8_t RR_PWM = 19, RR_IN1 = 18, RR_IN2 = 5;
+constexpr bool INVERTIR_FL = false, INVERTIR_FR = false, INVERTIR_RL = false, INVERTIR_RR = true;
+constexpr uint32_t PWM_FREQ = 20000;
+constexpr uint8_t PWM_RES = 8;
 
-// Rueda Trasera Izquierda (RL)
-constexpr uint8_t RL_PWM    = 33;
-constexpr uint8_t RL_IN1    = 32;
-constexpr uint8_t RL_IN2    = 14;
+// Velocidades
+constexpr int PWM_MAX = 182;
+constexpr int VEL_AVANCE = 120;
+constexpr int VEL_GIRO = 85;
+constexpr int VEL_BUSCAR = 80;
+constexpr int RAMPA_PASO = 4;
+constexpr unsigned long T_CONFIRMA_MS = 500;
 
-// Driver 2 (ruedas derechas)
-// Rueda Delantera Derecha (FR)
-constexpr uint8_t FR_PWM    = 13;
-constexpr uint8_t FR_IN1    = 23;
-constexpr uint8_t FR_IN2    = 2;
+// Ultrasonidos (distancia de frenado)
+constexpr int DIST_FRENADO_CM = 20;
 
-// Rueda Trasera Derecha (RR)
-constexpr uint8_t RR_PWM    = 19;
-constexpr uint8_t RR_IN1    = 18;
-constexpr uint8_t RR_IN2    = 5;
+// Control de giro en REGRESANDO
+constexpr float K_GIRO = 2.5f;
+constexpr int GIRO_MIN_PWM = 20;
+constexpr unsigned long T_GIRO_TIMEOUT = 3000;
 
-// Inversión de giro por orientación física de los motores
-constexpr bool INVERTIR_FL  = false;
-constexpr bool INVERTIR_FR  = false;
-constexpr bool INVERTIR_RL  = false;
-constexpr bool INVERTIR_RR  = true;   // El trasero derecho está invertido
-
-// Configuración PWM
-constexpr uint32_t PWM_FREQ = 20000;  // 20 kHz (evita ruido audible)
-constexpr uint8_t  PWM_RES  = 8;      // 8 bits (0-255)
-
-// ====================== PARÁMETROS DE VELOCIDAD ======================
-constexpr int PWM_MAX        = 182;   // Límite seguro para motores Faulhaber
-constexpr int VEL_AVANCE     = 120;   // Velocidad de ataque
-constexpr int VEL_GIRO       = 85;    // Velocidad de giro sobre el eje
-constexpr int VEL_BUSCAR     = 80;    // Velocidad durante búsqueda
-constexpr int RAMPA_PASO     = 8;     // Incremento de aceleración
-constexpr int MAX_CORRECCION = 50;    // Corrección angular máxima
-
-constexpr float KP_GIRO       = 2.5;  // Ganancia proporcional para giro puro
-constexpr float KP_CORRECCION = 1.2;  // Ganancia para corrección en avance
-
-// ====================== PARÁMETROS DE NAVEGACIÓN ======================
-constexpr float FRENTE_ANILLO      = 0.0f;     // Ángulo frontal del robot
-constexpr float TOL_APUNTADO       = 40.0f;    // Tolerancia para dar por alineado
-constexpr float YAW_PORTERIA       = 0.0f;     // Ángulo de la portería propia
-constexpr float TOL_PORTERIA       = 15.0f;    // Tolerancia al ir a portería
-constexpr float DISTANCIA_SEGURA_CM = 25.0f;   // Distancia a pared para detenerse
-
-constexpr unsigned long TIMEOUT_PELOTA_MS = 300;   // Tiempo sin datos para reiniciar búsqueda
-constexpr unsigned long TIEMPO_DETENCION_MS = 500; // Pausa tras detenerse
-constexpr unsigned long T_QUIETO_MS           = 4000; // Calibración inicial del MPU
-
-constexpr int N_CAPTURA = 3;   // Mínimo de sensores activos para considerar captura
-constexpr int LOOP_DELAY_MS = 20;  // 50 Hz
-
-// ====================== VARIABLES GLOBALES ======================
-extern volatile float yaw;
-extern volatile int estadoIR;
-extern volatile float anguloIR;
-extern volatile int nIR;
-extern volatile unsigned long tUltimaVezPelota;
-extern volatile int distFrente, distAtras, distIzq, distDer;
+// Variables externas
 extern volatile int velAvanceActual;
-extern volatile unsigned long tFrenoIniciado;
 extern volatile unsigned long tSenalEstable;
+extern volatile float Correccion;
 
+// UART
+constexpr uint8_t RX_PIN = 34;
+constexpr uint8_t TX_PIN = 17;
 extern HardwareSerial Enlace;
-extern char uartBuffer[64];
-extern volatile int bufIndex;
+extern volatile float anguloIR;
+extern volatile int estadoIR, nIR;
 extern volatile unsigned long ultimoDato;
+extern volatile int distFrente, distAtras, distIzq, distDer;
+struct __attribute__((__packed__)) TramaData {
+  float angulo;
+  uint8_t estado;
+  uint8_t totalActivos;
+  uint16_t distFrente;
+  uint16_t distAtras;
+  uint16_t distIzq;
+  uint16_t distDer;
+  uint16_t bitmapIR;
+  float posX;
+  float posY;
+};
+
+// MPU6500
+constexpr uint8_t MPU_ADDR = 0x68;
+extern volatile float yaw, gyroZoffset;
+extern volatile unsigned long tPrev;
 
 // Máquina de estados
-enum EstadoRobot { ESPERANDO_PELOTA, ALINEANDO_PELOTA, AVANZANDO_PELOTA, IR_A_NORTE, DETENIDO };
+enum EstadoRobot { ESPERANDO_PELOTA, BUSCANDO, PERSIGUIENDO, FRENANDO, REGRESANDO };
 extern volatile EstadoRobot estadoActual;
-
-// Variables auxiliares
+extern volatile unsigned long tFrenoIniciado, tUltimaVezPelota;
 extern volatile int pasoBusqueda;
 extern volatile unsigned long tBusqueda;
 extern volatile bool pelotaPerdidaReciente;
 extern String recepVecinos;
 
-extern volatile float gyroZoffset;
+extern volatile float Correccion; ///Correccion de velocidad debug
 
-extern volatile unsigned long tPrev;
+//LOCALIZACION
+extern volatile float distSeguridad;
+extern volatile float posicionRobotX; //RECIBIDOS DEL UART tanto X como Y
+extern volatile float posicionRobotY;
 
-#endif // CONFIG_H
+//WIFI
+
+extern WebServer server;
+// Cliente TCP para logs (opcional)
+extern WiFiClient client;
+constexpr char* ssid = "ESP32_DEBUG_MOTORES";
+constexpr char* password = "12345678";
+
+constexpr char* ipPC = "192.168.4.2";
+constexpr int puerto = 5000;
+
+
+#endif
