@@ -1,227 +1,257 @@
 /**
  * @file ESP32-MOTORES-RX-V1.ino
- * @brief Control principal del robot (motores y giroscopio)
- * 
- * Este programa es el "cerebro" del robot. Recibe datos del anillo de sensores
- * por UART, controla los motores mediante cinemática Mecanum, actualiza el rumbo
- * con el giroscopio MPU6050 y envía información de depuración por WiFi.
- * 
- * @author Robo_V Team
- * @version v12 (Debug WiFi + Estados optimizados)
+ * @brief Control principal del robot: máquina de estados, MPU6500, motores y UART binaria.
+ *        Incluye servidor web de debug y actualización OTA.
  */
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ArduinoOTA.h> 
 #include "func_giro.h"
 #include "func_motor.h"
 #include "config.h"
+#include "func_comunicacion.h"
 
-// ====================== DEBUG POR WiFi ======================
-const char* ssid = "ESP32_DEBUG";
-const char* password = "12345678";
-WebServer server(80);
-String debugInfo = "=== ESP32 MOTORES v12 (Depuración WiFi) ===\n\n";
+#define MODO 1   // 1 = competencia, 0 = calibración
 
-void handleRoot() {
-  server.send(200, "text/plain", debugInfo);
-}
-
-void actualizarDebugInfo() {
-  debugInfo = "=== Estado Actual ===\n";
-  debugInfo += "Estado: " + String(estadoActual) + "\n";
-  debugInfo += "Yaw: " + String(yaw, 2) + "°\n";
-  debugInfo += "Ángulo IR: " + String(anguloIR, 1) + "°\n";
-  debugInfo += "Sensores activos: " + String(nIR) + "\n";
-  debugInfo += "Distancias (cm) - F:" + String(distFrente) + 
-               " B:" + String(distAtras) + " L:" + String(distIzq) + 
-               " R:" + String(distDer) + "\n";
-  debugInfo += "Velocidad actual: " + String(velAvanceActual) + "\n";
-  debugInfo += "Tiempo sin pelota: " + String(millis() - tUltimaVezPelota) + " ms\n";
-  debugInfo += "=====================================\n";
-}
-
-void setupWiFi() {
-  WiFi.softAP(ssid, password);
-  server.on("/", handleRoot);
-  server.begin();
-  Serial.println("WiFi AP iniciado: " + String(ssid));
-  Serial.println("IP: " + WiFi.softAPIP().toString());
-}
-
-// ====================== COMUNICACIÓN UART ======================
-void leerUART() {
-  while (Enlace.available()) {
-    char c = Enlace.read();
-    if (c == '\n') {
-      uartBuffer[bufIndex] = '\0';
-      float a;
-      int c_st, n, df, db, dl, dr;
-      char rV[16];
-
-      // Parseo de la trama: "A:123.4 C:1 N:5 F:30 B:20 L:25 R:22 0,1,0,1,..."
-      if (sscanf(uartBuffer, "A:%f C:%d N:%d F:%d B:%d L:%d R:%d", 
-                 &a, &c_st, &n, &df, &db, &dl, &dr) >= 7) {
-        // Extraer vector de vecinos (16 bits) después de "R:"
-        char* ptr = strstr(uartBuffer, "R:");
-        if (ptr != NULL) {
-          ptr = strchr(ptr, ' ');
-          if (ptr != NULL) {
-            ptr++;
-            for (int i = 0; i < 16; i++) {
-              rV[i] = atoi(ptr);
-              ptr = strchr(ptr, ',');
-              if (ptr != NULL) ptr++;
-            }
-          }
-        }
-        
-        // Actualizar variables globales
-        anguloIR = a;
-        estadoIR = c_st;
-        nIR = n;
-        distFrente = df;
-        distAtras = db;
-        distIzq = dl;
-        distDer = dr;
-        // recepVecinos = rV; (si se necesita)
-        tUltimaVezPelota = millis();
-      }
-      bufIndex = 0;
-    } else if (c != '\r' && bufIndex < 127) {
-      uartBuffer[bufIndex++] = c;
-    }
-  }
-}
-
-// ====================== CONFIGURACIÓN INICIAL ======================
+/* ===================== SETUP ================================== */
 void setup() {
   Serial.begin(115200);
-  Enlace.begin(38400, SERIAL_8N1, RX_PIN, TX_PIN);
+  Enlace.begin(115200, SERIAL_8N1, RX_PIN, TX_PIN);
   delay(300);
+  Serial.println("\n=== ESP32 MOTORES v10 (OTA + IR corregido) ===");
   
-  Serial.println("\n=== ESP32 MOTORES v12 (Búsqueda Táctica) ===");
+  //Motores
+  inicializarMotores();
   
-  // Inicializar drivers de motor
-  pinMode(STBY, OUTPUT);
-  digitalWrite(STBY, LOW);  // Seguro activado inicialmente
+  // WiFi y servidor web
+  WiFi.softAP(ssid, password);
+  Serial.print("IP: ");
+  Serial.println(WiFi.softAPIP());
+  // Conexión opcional a servidor de logs (comentar si no se usa)
   
-  // Configurar pines de dirección como salidas
-  int pd[] = { FL_IN1, FL_IN2, FR_IN1, FR_IN2, RL_IN1, RL_IN2, RR_IN1, RR_IN2 };
-  for (int p : pd) pinMode(p, OUTPUT);
-  
-  pwmInit(FL_PWM);
-  pwmInit(FR_PWM);
-  pwmInit(RL_PWM);
-  pwmInit(RR_PWM);
-  
-  detener();
-  digitalWrite(STBY, HIGH);  // Quitar seguro
-  
-  // Inicializar giroscopio
-  if (mpuInit()) {
-    Serial.println("MPU6050 detectado, calibrando...");
-    delay(T_QUIETO_MS);
-    calibrarGyro();
-    Serial.println("Calibración completada.");
-  } else {
-    Serial.println("ERROR: MPU6050 no detectado. Verifique conexiones.");
+  while (!client.connect(ipPC, puerto)) {
+    Serial.println("Reintentando servidor logs...");
+    delay(1000);
   }
+
+  Serial.println("Conectado a servidor logs.");
+  // MPU6500
+  if (mpuInit()) Serial.println("MPU6500 OK.");
+  else Serial.println("ERROR: MPU6500 no responde.");
+
+  Serial.println(">> Calibrando norte estático. NO mover.");
+  calibrarGyro();
+  yaw = 0.0f;
+  tPrev = micros();
+  Serial.println(">> Fin diagnóstico.");
+
+  unsigned long t0 = millis();
+  while (millis() - t0 < T_QUIETO_MS) {
+    actualizarRumbo();
+    frenar();
+    delay(5);
+  }
+  Serial.println(">> Norte fijado. Esperando pelota.");
   
-  // Inicializar debug WiFi
-  setupWiFi();
+
+  arduino_OTA();
   
-  Serial.println("Sistema listo.");
+  estadoActual = ESPERANDO_PELOTA;
 }
 
-// ====================== BUCLE PRINCIPAL ======================
+/* ===================== LOOP ================================== */
 void loop() {
-  static unsigned long lastUpdate = 0;
-  if (millis() - lastUpdate < LOOP_DELAY_MS) return;
-  lastUpdate = millis();
-  
-  // 1. Leer datos del anillo
-  leerUART();
-  
-  // 2. Actualizar rumbo con el giroscopio
+  ArduinoOTA.handle();   // Necesario para OTA
+
   actualizarRumbo();
-  
-  // 3. Actualizar página de debug
-  actualizarDebugInfo();
-  server.handleClient();
-  
-  // 4. Máquina de estados principal
+  leerUART();
+
+  bool haySenal = (estadoIR == 1) && (millis() - ultimoDato < 400);
+  if (haySenal) {
+    tUltimaVezPelota = millis();
+    pelotaPerdidaReciente = false;
+  }
+
+#if MODO == 0
+  // Modo calibración
+  frenar();
+  static unsigned long t = 0;
+  if (millis() - t > 250) {
+    t = millis();
+    if (haySenal) Serial.printf("Ángulo = %.1f\n", anguloIR);
+    else Serial.println("Sin señal");
+  }
+#else
+  float errApunte = haySenal ? errorAngular(anguloIR) : 0;
+  bool pelotaPegada = haySenal && (abs(errApunte) <= TOL_APUNTADO) && (nIR >= N_CAPTURA); // CORREGIDO
+
+  // Máquina de estados
+  if (estadoActual == ESPERANDO_PELOTA) {
+    if (haySenal) estadoActual = PERSIGUIENDO;
+  } else if (pelotaPegada && estadoActual != REGRESANDO && estadoActual != FRENANDO) {
+    estadoActual = FRENANDO;
+    tFrenoIniciado = millis();
+  } else if (estadoActual == REGRESANDO) {
+    if (millis() - tUltimaVezPelota > 1000) {
+      estadoActual = BUSCANDO;
+      pelotaPerdidaReciente = true;
+      pasoBusqueda = 0;
+      tBusqueda = millis();
+    }
+  } else if (estadoActual != FRENANDO && estadoActual != REGRESANDO) {
+    if (haySenal) estadoActual = PERSIGUIENDO;
+    else {
+      if (!pelotaPerdidaReciente) {
+        pelotaPerdidaReciente = true;
+        pasoBusqueda = 0;
+        tBusqueda = millis();
+      }
+      estadoActual = BUSCANDO;
+    }
+  }
+
+  const char* nombre = "?";
+
   switch (estadoActual) {
     case ESPERANDO_PELOTA:
-      // Buscar girando en el lugar
-      girarEnSitio(VEL_BUSCAR);
-      if (estadoIR == 1) {  // Pelota detectada
-        estadoActual = ALINEANDO_PELOTA;
-        Serial.println("Pelota detectada. Alineando...");
+      frenar();
+      nombre = "BLOQUEADO";
+      break;
+    case BUSCANDO:
+      // Patrón de búsqueda (idéntico al original)
+      if (pasoBusqueda == 0) {
+        frenar();
+        nombre = "BUSQ:Pausa1s";
+        if (millis() - tBusqueda >= 1000) { pasoBusqueda = 1; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 1) {
+        avanzarSuave(VEL_BUSCAR, 0);
+        nombre = "BUSQ:Avance";
+        if (millis() - tBusqueda >= 600) { pasoBusqueda = 2; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 2) {
+        frenar();
+        nombre = "BUSQ:Pausa";
+        if (millis() - tBusqueda >= 300) { pasoBusqueda = 3; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 3) {
+        girarEnSitio(VEL_GIRO);
+        nombre = "BUSQ:GiroDer";
+        if (millis() - tBusqueda >= 400) { pasoBusqueda = 4; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 4) {
+        avanzarSuave(VEL_BUSCAR, 0);
+        nombre = "BUSQ:DiagDer";
+        if (millis() - tBusqueda >= 600) { pasoBusqueda = 5; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 5) {
+        frenar();
+        nombre = "BUSQ:Pausa";
+        if (millis() - tBusqueda >= 300) { pasoBusqueda = 6; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 6) {
+        girarEnSitio(-VEL_GIRO);
+        nombre = "BUSQ:GiroIzq";
+        if (millis() - tBusqueda >= 800) { pasoBusqueda = 7; tBusqueda = millis(); }
+      } else if (pasoBusqueda == 7) {
+        avanzarSuave(VEL_BUSCAR, 0);
+        nombre = "BUSQ:DiagIzq";
+        if (millis() - tBusqueda >= 600) { pasoBusqueda = 0; tBusqueda = millis(); }
       }
       break;
-      
-    case ALINEANDO_PELOTA:
+    case PERSIGUIENDO:
+      if (abs(errApunte) > TOL_APUNTADO) {
+        int sentido = (errApunte > 0) ? VEL_GIRO : -VEL_GIRO;
+        girarEnSitio(sentido);
+        tSenalEstable = 0;
+        nombre = "PERS:ENCUADRANDO";
+      } else {
+        if (tSenalEstable == 0) tSenalEstable = millis();
+        if (millis() - tSenalEstable < T_CONFIRMA_MS) {
+          frenar();
+          nombre = "PERS:FILTRO";
+        } else {
+          int corr = constrain((int)(errApunte * 2.0), -30, 30);
+          Correccion = corr;
+          avanzarSuave(VEL_AVANCE, corr);
+          nombre = "PERS:ATACANDO";
+        }
+      }
+      break;
+    case FRENANDO:
+      frenar();
+      nombre = "FRENANDO";
+      if (millis() - tFrenoIniciado > 250) estadoActual = REGRESANDO;
+      break;
+    case REGRESANDO:
       {
-        float error = errorAngular(anguloIR - yaw);
-        if (abs(error) <= TOL_APUNTADO) {
-          estadoActual = AVANZANDO_PELOTA;
-          Serial.println("Alineado. Avanzando...");
-          break;
+        static unsigned long tInicioGiro = 0;
+        static float errYawAnterior = 999.0f;
+        float errYaw = errorAngular(yaw);
+        if (abs(errYaw) > TOL_PORTERIA) {
+          int pwmGiro = constrain((int)(abs(errYaw) * K_GIRO), GIRO_MIN_PWM, VEL_GIRO);
+          int sentidoYaw = (errYaw < 0) ? pwmGiro : -pwmGiro;
+          girarEnSitio(sentidoYaw);
+          nombre = "REGR:GIRANDO";
+          if (abs(errYaw) < abs(errYawAnterior) - 2.0f) tInicioGiro = millis();
+          errYawAnterior = errYaw;
+          if (millis() - tInicioGiro > T_GIRO_TIMEOUT) {
+            estadoActual = BUSCANDO;
+            pelotaPerdidaReciente = true;
+            pasoBusqueda = 0;
+            tBusqueda = millis();
+            nombre = "REGR:TIMEOUT";
+            break;
+          }
+        } else {
+          if (distFrente < DIST_FRENADO_CM) {
+            frenar();
+            nombre = "REGR:REMATE";
+          } else {
+            int corr = constrain((int)(errYaw * -2.0), -30, 30);
+            Correccion = corr;
+            avanzarSuave(VEL_AVANCE, corr);
+            nombre = "REGR:AVANZANDO";
+          }
+          tInicioGiro = millis();
+          errYawAnterior = 999.0f;
         }
-        int giro = constrain(error * KP_GIRO, -VEL_GIRO, VEL_GIRO);
-        girarEnSitio(giro);
+        break;
       }
-      break;
-      
-    case AVANZANDO_PELOTA:
-      {
-        float error = errorAngular(anguloIR - yaw);
-        int correccion = constrain(error * KP_CORRECCION, -MAX_CORRECCION, MAX_CORRECCION);
-        avanzarSuave(VEL_AVANCE, correccion);
-        
-        // Verificar captura (suficientes sensores activos)
-        if (nIR >= N_CAPTURA) {
-          detener();
-          estadoActual = IR_A_NORTE;
-          tFrenoIniciado = millis();
-          Serial.println("Pelota capturada. Giro al norte.");
-        }
-        // Timeout: si no recibe datos de la pelota
-        else if (millis() - tUltimaVezPelota > TIMEOUT_PELOTA_MS) {
-          estadoActual = ESPERANDO_PELOTA;
-          Serial.println("Pelota perdida. Reanudando búsqueda.");
-        }
-      }
-      break;
-      
-    case IR_A_NORTE:
-      {
-        float error = errorAngular(YAW_PORTERIA - yaw);
-        if (abs(error) <= TOL_PORTERIA && distFrente < DISTANCIA_SEGURA_CM) {
-          detener();
-          estadoActual = ESPERANDO_PELOTA;
-          Serial.println("Área de penalización alcanzada. Esperando nueva pelota.");
-          break;
-        }
-        int correccion = constrain(error * KP_CORRECCION, -MAX_CORRECCION, MAX_CORRECCION);
-        avanzarSuave(VEL_AVANCE, correccion);
-      }
-      break;
-      
-    case DETENIDO:
-      detener();
-      if (millis() - tFrenoIniciado > TIEMPO_DETENCION_MS) {
-        estadoActual = ESPERANDO_PELOTA;
-      }
-      break;
   }
-  
-  // Depuración por serie (opcional)
-  static unsigned long lastSerial = 0;
-  if (millis() - lastSerial > 500) {
-    Serial.printf("Yaw: %.2f | IR Ang: %.1f | Estado: %d | nIR: %d | Vel: %d\n",
-                  yaw, anguloIR, estadoActual, nIR, velAvanceActual);
-    lastSerial = millis();
+
+  // Reporte por serial cada 250 ms
+  static unsigned long t = 0;
+  if (millis() - t > 250) {
+    t = millis();
+    float errYaw = errorAngular(yaw);
+    Serial.printf("%s | A=%.1f S=%d N=%d ErrAp=%.1f ErrY=%.1f Yaw=%.1f V:%s\n",
+                  nombre, anguloIR, haySenal, nIR, errApunte, errYaw, yaw, recepVecinos);
   }
+
+  // Debug web cada 1s
+  static unsigned long tiempo = 0;
+  if (millis() - tiempo > 100) {
+    tiempo = millis();
+    float errYaw = errorAngular(yaw);
+    debugLog(
+      "Tiempo: " + String(millis()) + "\n" +
+      "Memoria RAM: " + String(ESP.getFreeHeap()) + "\n" +
+      "Memoria FLASH: " + String(ESP.getFlashChipSize()) + "\n" +
+      "Estado: " + String(estadoActual) + "\n" +
+      "Accion: " + nombre + "\n" +
+      "AnguloIR: " + String(anguloIR) + "\n" +
+      "Receptores: " + String(nIR) + "\n" +
+      "Yaw: " + String(yaw) + "\n" +
+      "ErrApunte: " + String(errApunte) + "\n" +
+      "ErrYaw: " + String(errYaw) + "\n" +
+      "Señal: " + String(haySenal ? "Si" : "No") + "\n" +
+      "Vecinos: " + recepVecinos + "\n" +
+      "DistF: " + String(distFrente) + " cm\n" +
+      "DistB: " + String(distAtras) + " cm\n" +
+      "DistL: " + String(distIzq) + " cm\n" +
+      "DistR: " + String(distDer) + " cm\n" +
+      "Vel: " + String(velAvanceActual) + "\n" +
+      "Corr: " + String(Correccion) + "\n");
+  }
+
+#endif
+  delay(10);
 }
