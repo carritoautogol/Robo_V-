@@ -17,6 +17,8 @@ https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspS
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/config.h
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_anillo.cpp
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_anillo.h
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_comunicacion.cpp
+https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_comunicacion.h
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_multiplexor.cpp
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_multiplexor.h
 https://raw.githubusercontent.com/carritoautogol/Robo_V-/refs/heads/main-V3/EspSensorial/func_ultrasonicos.cpp
