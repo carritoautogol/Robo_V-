@@ -1,10 +1,11 @@
+/**
+ * @file func_multiplexor.h
+ * @brief Declaración de la función para seleccionar canal del CD74HC4067.
+ */
+
 #ifndef FUNC_MULTIPLEXOR_H
 #define FUNC_MULTIPLEXOR_H
 
-/**
- * @brief Selecciona un canal del multiplexor CD74HC4067.
- * @param canal Número de canal (0 a 15).
- */
-void seleccionarCanal(int canal);
+void seleccionarCanal(int canal);   // Selecciona un canal (0-15)
 
-#endif // FUNC_MULTIPLEXOR_H
+#endif
